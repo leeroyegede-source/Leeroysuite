@@ -23,7 +23,6 @@ const WebsiteDesign = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [SelectedScreenSize, setSelectedScreenSize] = useState("web");
 
-  // 🔥 FIX: keep generic HTMLElement, then safely narrow later
   const [selectedElement, setSelectedElement] =
     useState<HTMLElement | null>(null);
 
@@ -34,17 +33,17 @@ const WebsiteDesign = ({
     selectedElRef.current = selectedElement;
   }, [selectedElement]);
 
-  // 🔥 FIX IMAGES + CHARTS SAFELY
+  // Fix images + canvas rendering
   function fixContent(html: string) {
     let updated = html;
 
-    // Replace broken images
+    // Fix broken images
     updated = updated.replace(
       /<img[^>]*src=["'][^"']*["'][^>]*>/g,
       (tag) => tag.replace(/src=["'][^"']*["']/, `src="/1.jpg"`)
     );
 
-    // Fix chart/canvas sizing
+    // Fix canvas height
     updated = updated.replace(
       /<canvas([^>]*)><\/canvas>/g,
       `<div class="w-full h-[300px] min-h-[300px]"><canvas $1></canvas></div>`
@@ -136,38 +135,49 @@ const WebsiteDesign = ({
   }, [safeHTML]);
 
   return (
-    <div className="flex gap-2 w-full">
-      <div className="p-5 w-full flex items-center flex-col">
-        <iframe
-          ref={iframeRef}
-          className={`${
-            SelectedScreenSize === "web" ? "w-full" : "w-[600px]"
-          } h-[600px] border-2 rounded-xl`}
-          sandbox="allow-scripts allow-same-origin"
-        />
+    <div className="flex w-full h-screen overflow-hidden">
 
-        <WebpageTools
-          SelectedScreenSize={SelectedScreenSize}
-          setSelectedScreenSize={setSelectedScreenSize}
-          generatedCode={safeHTML}
-          onSave={onSave}
-          isSaving={isSaving}
-          loading={loading}
-        />
+      {/* LEFT SIDE (PREVIEW + TOOLBAR) */}
+      <div className="flex-1 flex flex-col h-full w-full p-3 gap-3">
+
+        {/* ✅ 85% PREVIEW */}
+        <div className="h-[85%] border rounded-xl overflow-hidden bg-white">
+          <iframe
+            ref={iframeRef}
+            className="w-full h-full"
+            sandbox="allow-scripts allow-same-origin"
+          />
+        </div>
+
+        {/* ✅ 15% TOOLBAR */}
+        <div className="h-[15%] min-h-[100px]">
+          <WebpageTools
+            SelectedScreenSize={SelectedScreenSize}
+            setSelectedScreenSize={setSelectedScreenSize}
+            generatedCode={safeHTML}
+            onSave={onSave}
+            isSaving={isSaving}
+            loading={loading}
+          />
+        </div>
+
       </div>
 
-      {/* 🔥 FIXED TYPE SAFETY FOR IMAGE ELEMENT */}
-      {selectedElement && selectedElement.tagName === "IMG" ? (
-        <ImageSettingSection
-          selectedEl={selectedElement as HTMLImageElement}
-          clearSelection={() => setSelectedElement(null)}
-        />
-      ) : selectedElement ? (
-        <ElementSetting
-          selectedEl={selectedElement}
-          clearSelection={() => setSelectedElement(null)}
-        />
-      ) : null}
+      {/* RIGHT PANEL */}
+      <div className="shrink-0">
+        {selectedElement && selectedElement.tagName === "IMG" ? (
+          <ImageSettingSection
+            selectedEl={selectedElement as HTMLImageElement}
+            clearSelection={() => setSelectedElement(null)}
+          />
+        ) : selectedElement ? (
+          <ElementSetting
+            selectedEl={selectedElement}
+            clearSelection={() => setSelectedElement(null)}
+          />
+        ) : null}
+      </div>
+
     </div>
   );
 };
