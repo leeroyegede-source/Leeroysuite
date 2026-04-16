@@ -1,0 +1,27 @@
+import { NextResponse } from "next/server";
+import ImageKit from "imagekit";
+
+const imagekit = new ImageKit({
+  publicKey: process.env.public_mKv/iyxwjgu6tl/bpoU5niMGILI=,
+  privateKey: process.env.private_QT7Fys/BOYItig+793O1yHYw5Uk=,
+  urlEndpoint: process.env.https://ik.imagekit.io/uklxnkfhf,
+});
+
+export async function GET() {
+  try {
+    const result = await imagekit.upload({
+      file: "https://via.placeholder.com/300",
+      fileName: "test-image.jpg",
+    });
+
+    return NextResponse.json({
+      success: true,
+      url: result.url,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
+  }
+}
